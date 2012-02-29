@@ -30,6 +30,7 @@ public class User {
 		this.achievements = ((String) userRs.getObject("achievements")).split(",");
 			//another test
 			//changed it
+			//test
 
 	}
 
