@@ -29,7 +29,7 @@ public class User {
 		this.quiz_friends = ((String) userRs.getObject("friends")).split(",");
 		this.achievements = ((String) userRs.getObject("achievements")).split(",");
 		
-			
+			//changed it
 
 	}
 
