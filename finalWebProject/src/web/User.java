@@ -28,7 +28,7 @@ public class User {
 		this.is_admin = (Integer) userRs.getObject("is_admin");
 		this.quiz_friends = ((String) userRs.getObject("friends")).split(",");
 		this.achievements = ((String) userRs.getObject("achievements")).split(",");
-		
+			//another test
 			//changed it
 
 	}
