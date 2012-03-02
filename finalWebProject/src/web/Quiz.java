@@ -8,32 +8,35 @@ import java.util.StringTokenizer;
 
 public class Quiz {
 	
-	private final String creator_id;
+	private final String creator_id;  
 	private final String quiz_id;
 	private String quiz_name;
 	private String description;
 	private ArrayList<String> question_ids;
 	private ArrayList<String> genre_ids;
 	private final String date_created;
-	private DatabaseConnection db;
+	private int timesTaken;
+	private QuizDBConnection db;
 	private static final String TABLE_NAME = "quizzes";
 	private static final String[] COL_NAMES = {"quiz_id", "quiz_name", 
-		"creator_id", "description", "date_created", "question_ids", "genre_ids", "date_created", "quiz_id"};
+		"creator_id", "description", "date_created", "question_ids", "genre_ids", "quiz_id", "num_times_taken"};
 	private static final String ID_DELIMS = ", \t\n\r\f";
 	
 	
 	/**
-	 * if quiz_id is null, will assume that new quiz is being created
+	 * if quiz_id is null, will assume that new quiz is being created.
+	 * If new quiz, pass in 0 as argument to timesTaken
+	 * @param quiz_id
 	 * @param creator_id
 	 * @param quiz_name
-	 * @param isNew
 	 * @param description
 	 * @param question_ids
 	 * @param genre_ids
+	 * @param timesTaken
 	 * @throws SQLException 
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name, String description,
-			ArrayList<String> question_ids, ArrayList<String> genre_ids) throws SQLException {
+			ArrayList<String> question_ids, ArrayList<String> genre_ids, int timesTaken) throws SQLException {
 		super();
 		db = new DatabaseConnection();
 		this.creator_id = creator_id;
@@ -41,30 +44,39 @@ public class Quiz {
 		this.description = description;
 		this.question_ids = question_ids;
 		this.genre_ids = genre_ids;
+		this.timesTaken = timesTaken;
 		if(quiz_id == null) {
-			this.date_created = new Date().toString();
-			this.quiz_id = generateId();
-			addToDatabase();
+			this.quiz_id = addToDatabase();
+			setDate();
 		} else {
 			this.date_created = parseCategory(db.getRowEntry(TABLE_NAME, quiz_id), COL_NAMES[7]);
 			this.quiz_id = quiz_id;
 		}
 	}
+	
+	/*
+	 * 
+	 */
+	private void setDate(){
+		this.date_created = this.db.getQuizAttribute(TABLE_NAME, this.quiz_id, "date_created");
+	}
+	
 
 	//note that if only putting in question_ids, put description before ArrayList in 
 	//arguments
 	/**
 	 * 
+	 * @param quiz_id
 	 * @param creator_id
 	 * @param quiz_name
-	 * @param isNew
 	 * @param description
 	 * @param question_ids
+	 * @param timesTaken
 	 * @throws SQLException 
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name, String description,
-			ArrayList<String> question_ids) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, description, question_ids, null);
+			ArrayList<String> question_ids, int timesTaken) throws SQLException {
+		this(quiz_id, creator_id, quiz_name, description, question_ids, null, timesTaken);
 		if(quiz_id != null){
 			genre_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
 		}
@@ -73,16 +85,17 @@ public class Quiz {
 	//note that if only passing in genre_ids, put description after
 	/**
 	 * 
+	 * @param quiz_id
 	 * @param creator_id
 	 * @param quiz_name
-	 * @param isNew
 	 * @param genre_ids
 	 * @param description
+	 * @param timesTaken
 	 * @throws SQLException 
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name,
-			ArrayList<String> genre_ids, String description) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, description, null, genre_ids);
+			ArrayList<String> genre_ids, String description, int timesTaken) throws SQLException {
+		this(quiz_id, creator_id, quiz_name, description, null, genre_ids, int timesTaken);
 		if(quiz_id != null){
 			question_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
 		}
@@ -90,14 +103,15 @@ public class Quiz {
 	
 	/**
 	 * 
+	 * @param quiz_id
 	 * @param creator_id
 	 * @param quiz_name
-	 * @param isNew
 	 * @param description
+	 * @param timesTaken
 	 * @throws SQLException 
 	 */
-	public Quiz(String quiz_id, String creator_id, String quiz_name, boolean isNew, String description) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, description, null, null);
+	public Quiz(String quiz_id, String creator_id, String quiz_name, boolean isNew, String description, int timesTaken) throws SQLException {
+		this(quiz_id, creator_id, quiz_name, description, null, null, timesTaken);
 		if(quiz_id != null){
 			question_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
 			genre_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
@@ -106,13 +120,14 @@ public class Quiz {
 	
 	/**
 	 * 
+	 * @param quiz_id
 	 * @param creator_id
 	 * @param quiz_name
-	 * @param isNew
+	 * @param timesTaken
 	 * @throws SQLException 
 	 */
-	public Quiz(String quiz_id, String creator_id, String quiz_name) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, "", null, null);
+	public Quiz(String quiz_id, String creator_id, String quiz_name, int timesTaken) throws SQLException {
+		this(quiz_id, creator_id, quiz_name, "", null, null, timesTaken);
 		if(quiz_id != null){
 			question_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
 			genre_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
@@ -123,7 +138,7 @@ public class Quiz {
 	/*
 	 * 
 	 */
-	private ArrayList<String> toArrayList(String str) {
+	private static ArrayList<String> toArrayList(String str) {
 		StringTokenizer tokenizer = new StringTokenizer(str, Quiz.ID_DELIMS);
 		ArrayList<String> list = new ArrayList<String>();
 		while(tokenizer.hasMoreTokens()){
@@ -131,11 +146,21 @@ public class Quiz {
 		}
 		return list;
 	}
-
+	
 	/*
 	 * 
 	 */
-	private String parseCategory(ResultSet rowEntry, String colName) throws SQLException {
+	private static String arrayToString(ArrayList<String> list) {
+		if(list = null) return "";
+		String str = list.toString();
+		str = str.substring(1, str.length() - 1);
+		return str;
+	}
+	
+	/*
+	 * 
+	 */
+	private static String parseCategory(ResultSet rowEntry, String colName) throws SQLException {
 		rowEntry.next();
 		return rowEntry.getString(colName);
 	}
@@ -451,26 +476,42 @@ public class Quiz {
 		return sublist;
 	}
 	
-	/*
+	/**
 	 * 
+	 * @param newAmount
 	 */
-	private String generateId() {
-		//TODO: fill in this code here
-		//need to decide how ID is going to be generated - 
-		//is this something that we pawn off on the connection class?
-		//what is method behind ID generation?
-		
-		return null;
+	public void setTimesTaken(int newAmount) {
+		this.timesTaken = newAmount;
+		//TODO: set in database ala:
+		// String genres = toString(genre_ids);
+		// attributeMap.put(COL_NAMES[5], questions);
+		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
 	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public int getTimesTaken() {
+		return this.timesTaken;
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public int incrementTimesTaken() {
+		setTimesTaken(this.timesTaken + 1);
+	}
+	
 	
 	/*
 	 * 
 	 */
 	private void addToDatabase() {
-		//TODO: construct so all pertinent information is passed on to the dbConnection for processing
-		//set in database a la:
-		//add each ivar/identifier pair to hashMap
-		//db.addEntry(TABLE_NAME, hashMap);
+		String attributes = "( \"" + this.quiz_name + "\", \"" + this.creator_id + "\", \"" + this.description + "\", \"" + 
+				arrayToString(this.question_ids) + "\", \"" + arrayToString(this.genre_ids) + "\", " + this.num_times_taken + ")";
+		db.addQuizEntry(TABLE_NAME, attributes);
 	}
 
 }
