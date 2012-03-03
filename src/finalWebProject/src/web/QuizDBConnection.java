@@ -60,6 +60,7 @@ public class QuizDBConnection {
 				+ QUIZ_ID_COL + " = " + quiz_id + ";");
 	}
 	
+	
 	/**
 	 * Takes in a string, attributes, that is formatted to list the values to be inserted into the 
 	 * columns indicated by INPUT_COLS. The method returns the id of the newly inserted quiz.
@@ -71,6 +72,8 @@ public class QuizDBConnection {
 		stmt.executeUpdate("INSERT INTO " + table_name + " " + INPUT_COLS + " VALUES " + attributes + ";");
 		return Long.toString(stmt.executeQuery("SELECT LAST_INSERT_ID();").getLong(QUIZ_ID_COL));
 	}
+	
+	
 	
 	/**
 	 * This method returns, in String form, the given entry in table_name at cell
@@ -86,6 +89,7 @@ public class QuizDBConnection {
 				+ QUIZ_ID_COL + " = " + quiz_id + ";").getString(col_name);
 	}
 	
+
 	/**
 	 * This method removes a quiz object from the database, designated by quiz_id
 	 * @param table_name

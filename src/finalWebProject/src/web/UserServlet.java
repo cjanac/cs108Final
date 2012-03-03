@@ -1,8 +1,9 @@
-package web;
+package finalWebProject.src.web;
 
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -35,46 +36,6 @@ public class UserServlet extends HttpServlet {
 
 		
 
-	private static String generate(String input) {
-
-		MessageDigest md;
-		try {
-			md = MessageDigest.getInstance("SHA-1");
-			byte[] msg = input.getBytes();
-
-			// Update the message digest with some more bytes
-			// This can be performed multiple times before creating the hash
-			md.update(msg);
-
-			// Create the digest from the message
-			byte[] aMessageDigest = md.digest();
-			return hexToString(aMessageDigest);
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}       
-
-		return null;
-
-	}
-
-
-
-	public static String hexToString(byte[] bytes) {
-		StringBuffer buff = new StringBuffer();
-		for (int i=0; i<bytes.length; i++) {
-			int val = bytes[i];
-			val = val & 0xff;  // remove higher bits, sign
-			if (val<16) buff.append('0'); // leading 0
-			buff.append(Integer.toString(val, 16));
-		}
-		return buff.toString();
-	}
-
-	
-	
-	
-	
 	
 	
 	/**
@@ -82,24 +43,51 @@ public class UserServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		 ServletContext context = getServletContext();
-		 Database db = context.getAttribute("database");
+		 UserDBConnection userDB = context.getAttribute("userDB");
+
+		 String user_id=  request.getParameter("user_id");
+		 
+		String password= request.getParameter("password");
+
+		if(!userDB.userExists("user",user_id) || !userDB.nameMatchesPassword("user",user_id,password)) {
+
+			RequestDispatcher dispatch = request.getRequestDispatcher("badPassword.jsp");
+
+			dispatch.forward(request, response);
+			
+			
+		} else {
+		
+		 
         // accountManager account = (accountManager) context.getAttribute("account");
+         QuizDBConnection quizDB = context.getAttribute("quizDB");
          
+		 User user = new User(user_id);
 		 
+         ArrayList<String> popularQuizzes = quizDB.listPopular();
+         ArrayList<String> recentQuizzes = quizDB.listRecent();
+         ArrayList<String> recentActivities = userDB.listRecentQuizzes(user_id);
+         ArrayList<String> friendActivities = userDB.listRecentQuizzes(user_id);
+
+         ArrayList<String> achievements = userDB.listAchievements(user_id);
+       //  ArrayList<Messages> messages = userDB.listMessages(user_id);
+         
+		 String user_id = request.getParameter("user_id");
+         
+		 request.setAttribute(user,"user");
+		 request.setAttribute(popularQuizzes,"popularQuizzes");
+		 request.setAttribute(recentQuizzes,"recentQuizzes");
+		 request.setAttribute(recentActivities,"recentActivities");
+		 request.setAttribute(achievements,"achievements");
+		 request.setAttribute(friendActivities,"friendActivities");
+
+		// request.setAttribute(messages,"messages");
+		 RequestDispatcher dispatch = request.getRequestDispatcher("userHomePage.jsp");
+
+		dispatch.forward(request, response);
+
+		}
 		 
-		 String userName = request.getParameter("userName");
-         String password = request.getParameter("password");
-         
-         /*
-         String passcode = generate(password);
-         
-         if(db.passwordMatchesName(userName,passcode)) {
-        	 
-         }
-         */
-		 
-		 User user = new User(userName, password);
-         
          
 	}
 

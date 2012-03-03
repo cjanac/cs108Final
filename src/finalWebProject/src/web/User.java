@@ -1,8 +1,9 @@
-package web;
+package finalWebProject.src.web;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class User {
@@ -18,20 +19,18 @@ public class User {
 	private ArrayList<Quiz> recent_quizzes;
 
 
-	public User(String userName, String password) {
-		ResultSet userRs = stmt.executeQuery("SELECT * FROM useuserRs WHERE uid = \""+ userName +"\" AND password  = \""+ password +"\"");
-	
-		this.name = (String) userRs.getObject("name");
-		this.uid = (String) userRs.getObject("uid");
-		this.date_joined = (String) userRs.getObject("date_joined");
-		this.last_login = (String) userRs.getObject("last_login");
-		this.is_admin = (Integer) userRs.getObject("is_admin");
-		this.quiz_friends = ((String) userRs.getObject("friends")).split(",");
-		this.achievements = ((String) userRs.getObject("achievements")).split(",");
+	public User(String userId) throws SQLException{
+		UserDBConnection db = new UserDBConnection();
 		
-			//changed it
-			//test
+		this.name = db.getUserAttribute("user",userId,"name");
+		this.uid = db.getUserAttribute("user",userId,"uid");
+		this.date_joined =  db.getUserAttribute("user",userId,"date_joined");
+		this.last_login =  db.getUserAttribute("user",userId,"last_login");
+		this.is_admin = (Integer) Integer.parseInt(db.getUserAttribute("user",userId,"is_admin"));
+		this.quiz_friends =  db.getUserAttribute("user",userId,"friends").split(",");
+		this.achievements = db.getUserAttribute("user",userId,"achievements").split(",");	
 
+		
+		
 	}
-
 }
