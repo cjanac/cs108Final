@@ -20,6 +20,14 @@ public class Quiz {
 	private static final String TABLE_NAME = "quizzes";
 	private static final String[] COL_NAMES = {"quiz_id", "quiz_name", 
 		"creator_id", "description", "date_created", "question_ids", "genre_ids", "quiz_id", "num_times_taken"};
+	private static final String QUIZ_ID = "quiz_id";
+	private static final String QUIZ_NAME = "quiz_name";
+	private static final String CREATOR_ID = "creator_id";
+	private static final String DESCRIPTION = "description";
+	private static final String DATE_CREATED = "date_created";
+	private static final String QUESTIONS = "question_ids";
+	private static final String GENRES = "genre_ids";
+	private static final String TIMES_TAKEN = "num_times_taken";
 	private static final String ID_DELIMS = ", \t\n\r\f";
 	
 	
@@ -49,7 +57,7 @@ public class Quiz {
 			this.quiz_id = addToDatabase();
 			setDate();
 		} else {
-			this.date_created = parseCategory(db.getRowEntry(TABLE_NAME, quiz_id), COL_NAMES[7]);
+			this.date_created = parseCategory(db.getQuizRowInfo(TABLE_NAME, quiz_id), DATE_CREATED);
 			this.quiz_id = quiz_id;
 		}
 	}
@@ -78,7 +86,7 @@ public class Quiz {
 			ArrayList<String> question_ids, int timesTaken) throws SQLException {
 		this(quiz_id, creator_id, quiz_name, description, question_ids, null, timesTaken);
 		if(quiz_id != null){
-			genre_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
+			genre_ids = toArrayList(parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
 		}
 	}
 	
@@ -97,7 +105,7 @@ public class Quiz {
 			ArrayList<String> genre_ids, String description, int timesTaken) throws SQLException {
 		this(quiz_id, creator_id, quiz_name, description, null, genre_ids, int timesTaken);
 		if(quiz_id != null){
-			question_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
+			question_ids = toArrayList(parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
 		}
 	}
 	
@@ -113,8 +121,8 @@ public class Quiz {
 	public Quiz(String quiz_id, String creator_id, String quiz_name, boolean isNew, String description, int timesTaken) throws SQLException {
 		this(quiz_id, creator_id, quiz_name, description, null, null, timesTaken);
 		if(quiz_id != null){
-			question_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
-			genre_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
+			question_ids = toArrayList(parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
+			genre_ids = toArrayList(parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
 		}
 	}
 	
@@ -129,9 +137,9 @@ public class Quiz {
 	public Quiz(String quiz_id, String creator_id, String quiz_name, int timesTaken) throws SQLException {
 		this(quiz_id, creator_id, quiz_name, "", null, null, timesTaken);
 		if(quiz_id != null){
-			question_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
-			genre_ids = toArrayList(parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
-			description = parseCategory(db.getRowEntry(TABLE_NAME, this.quiz_id), COL_NAMES[3]);
+			question_ids = toArrayList(parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[5]));
+			genre_ids = toArrayList(parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[6]));
+			description = parseCategory(db.getQuizRowInfo(TABLE_NAME, this.quiz_id), COL_NAMES[3]);
 		}
 	}
 	
@@ -180,10 +188,7 @@ public class Quiz {
 	 */
 	public void setQuiz_name(String quiz_name) {
 		this.quiz_name = quiz_name;
-		//TODO: set in database ala:
-		// attributeMap.put(COL_NAMES[1], quiz_name);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
-		//
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUIZ_NAME, this.quiz_name)
 	}
 
 	/**
@@ -200,10 +205,7 @@ public class Quiz {
 	 */
 	public void setDescription(String description) {
 		this.description = description;
-		//TODO: set in database ala:
-		// attributeMap.put(COL_NAMES[3], description);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
-		//
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, DESCRIPTION, this.description);
 	}
 
 	/**
@@ -228,11 +230,8 @@ public class Quiz {
 	 */
 	public void setQuestion_ids(ArrayList<String> question_ids) {
 		this.question_ids = question_ids;
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
-		//
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	/**
 	 * 
@@ -256,11 +255,8 @@ public class Quiz {
 	 */
 	public void setGenre_ids(ArrayList<String> genre_ids) {
 		this.genre_ids = genre_ids;
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids); - make sure that this will give database friendly format
-		// attributeMap.put(COL_NAMES[6], genres);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
-		//
+		String genres = arrayToString(this.genre_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, GENRES, genres);
 	}
 	
 	/**
@@ -285,10 +281,6 @@ public class Quiz {
 	 */
 	public String getDate_created() {
 		return date_created;
-		//what format do we want to work with here?
-		//allow clients of class to have flexibility
-		//of directly manipulating Date, or ease of
-		//processing with formatted form?
 	}
 	
 	/**
@@ -301,10 +293,8 @@ public class Quiz {
 			question_ids.add(question_id);
 		}
 		question_ids.add(question_index, question_id);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	
 	/**
@@ -313,10 +303,8 @@ public class Quiz {
 	 */
 	public void addQuestion(String question_id){
 		question_ids.add(question_id);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	
 	/**
@@ -325,10 +313,8 @@ public class Quiz {
 	 */
 	public void addQuestions(ArrayList<String> questions){
 		question_ids.addAll(questions);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	
 	/**
@@ -341,10 +327,8 @@ public class Quiz {
 			question_ids.addAll(questions);
 		}
 		question_ids.addAll(index, questions);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	} 
 	
 	/**
@@ -353,10 +337,8 @@ public class Quiz {
 	 */
 	public void removeQuestion(String question_id){
 		question_ids.remove(question_id);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	
 	/**
@@ -365,10 +347,8 @@ public class Quiz {
 	 */
 	public void removeQuestion(int index){
 		question_ids.remove(index);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	
 	/**
@@ -377,10 +357,8 @@ public class Quiz {
 	 */
 	public void removeQuestions(ArrayList<String> toRemove){
 		question_ids.removeAll(toRemove);
-		//TODO: set in database ala:
-		// String questions = toString(question_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String questions = arrayToString(this.question_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, questions);
 	}
 	
 	/**
@@ -388,10 +366,7 @@ public class Quiz {
 	 */
 	public void clearQuestions() {
 		question_ids.clear();
-		//TODO: set in database ala:
-		// String questions = toString(question_ids); - this would result in either "" or null, depending on desired sentinel
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, QUESTIONS, "");
 	}
 	
 	/**
@@ -400,10 +375,8 @@ public class Quiz {
 	 */
 	public void addGenre(String genre_id){
 		genre_ids.add(genre_id);
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String genres = arrayToString(this.genre_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, GENRES, genres);
 	}
 	
 	/**
@@ -412,10 +385,8 @@ public class Quiz {
 	 */
 	public void addGenres(ArrayList<String> genres){
 		genre_ids.addAll(genres);
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String genres = arrayToString(this.genre_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, GENRES, genres);
 	}
 	
 	/**
@@ -424,10 +395,8 @@ public class Quiz {
 	 */
 	public void removeGenre(String genre_id){
 		genre_ids.remove(genre_id);
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String genres = arrayToString(this.genre_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, GENRES, genres);
 	}
 	
 	/**
@@ -436,10 +405,8 @@ public class Quiz {
 	 */
 	public void removeGenres(ArrayList<String> toRemove){
 		genre_ids.removeAll(toRemove);
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		String genres = arrayToString(this.genre_ids);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, GENRES, genres);
 	}
 	
 	/**
@@ -447,10 +414,7 @@ public class Quiz {
 	 */
 	public void clearGenres() {
 		genre_ids.clear();
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids); - this would result in either "" or null, depending on desired sentinel
-		// attributeMap.put(COL_NAMES[5], genres);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, GENRES, "\"\"");
 	}
 	
 	/**
@@ -482,10 +446,7 @@ public class Quiz {
 	 */
 	public void setTimesTaken(int newAmount) {
 		this.timesTaken = newAmount;
-		//TODO: set in database ala:
-		// String genres = toString(genre_ids);
-		// attributeMap.put(COL_NAMES[5], questions);
-		// db.setAttributes(TABLE_NAME, quizID, attributeMap);
+		db.setQuizAttribute(TABLE_NAME, this.quiz_id, "num_times_taken", this.timesTaken);
 	}
 	
 	/**
@@ -504,13 +465,21 @@ public class Quiz {
 		setTimesTaken(this.timesTaken + 1);
 	}
 	
+	/**
+	 * Do not call further methods on quiz object after calling this method.
+	 * Behavior is undefined.
+	 */
+	public void removeQuiz() {
+		db.removeQuiz(TABLE_NAME, this.quiz_id);
+		db.close();
+	}
 	
 	/*
 	 * 
 	 */
 	private void addToDatabase() {
 		String attributes = "( \"" + this.quiz_name + "\", \"" + this.creator_id + "\", \"" + this.description + "\", \"" + 
-				arrayToString(this.question_ids) + "\", \"" + arrayToString(this.genre_ids) + "\", " + this.num_times_taken + ")";
+				arrayToString(this.question_ids) + "\", \"" + arrayToString(this.genre_ids) + "\", " + this.num_times_taken + ", CURDATE())";
 		db.addQuizEntry(TABLE_NAME, attributes);
 	}
 
