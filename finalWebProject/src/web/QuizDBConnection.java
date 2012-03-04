@@ -1,7 +1,7 @@
 
 import java.sql.*;
 
-public class QuizDBConnection {
+public class QuizDBConnection extends DBConnection {
 	static String account = "quizzesdb";
 	static String password = "IlPY!py4p!";
 	static String server = "quizzesdb.db.8260487.hostedresource.com";
@@ -12,16 +12,7 @@ public class QuizDBConnection {
 	private static final String INPUT_COLS = "(quiz_name, creator_id, description, question_ids, genre_ids, num_times_taken, date_created)";
 	
 	public QuizDBConnection() {
-		try{
-			Class.forName("com.mysql.jdbc.Driver");
-			con = DriverManager.getConnection("jdbc:mysql://" + server, account, password);
-			stmt = con.createStatement();
-			stmt.executeQuery("USE " + database);
-		}catch (SQLException e){
-			e.printStackTrace();
-		}catch (ClassNotFoundException e){
-			e.printStackTrace();
-		}
+		super();
 	}
 	
 	/**

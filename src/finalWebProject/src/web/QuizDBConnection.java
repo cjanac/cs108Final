@@ -2,103 +2,92 @@ package finalWebProject.src.web;
 
 import java.sql.*;
 
-public class QuizDBConnection {
-	static String account = "quizzesdb";
-	static String password = "IlPY!py4p!";
-	static String server = "quizzesdb.db.8260487.hostedresource.com";
-	static String database = "quizzesdb"; 
-	private Connection con;
-	private Statement stmt;
-	private static final String QUIZ_ID_COL = "quiz_id";
-	private static final String INPUT_COLS = "(quiz_name, creator_id, description, question_ids, genre_ids, num_times_taken, date_created, rand_flag, " +
-			"multipage_flag, practice_flag)";
+public class QuizDBConnection extends DBConnection {
+	private static final String TABLE_NAME = "quizzes";
+	private static final String ID_COL = "quiz_id";
+	private static final String INPUT_COLS = "(quiz_name, creator_id, description, question_ids, genre_ids, num_times_taken, date_created, rand_flag, multipage_flag, practice_flag)";
+	private static final String DEFAULT_ORDER_COL = "date_created";
+	private static final String DEFAULT_ORDER_DIR = "DESC";
 	
+	/**
+	 * Creates a new QuizDBConnection instance
+	 */
 	public QuizDBConnection() {
-		try{
-			Class.forName("com.mysql.jdbc.Driver");
-			con = DriverManager.getConnection("jdbc:mysql://" + server, account, password);
-			stmt = con.createStatement();
-			stmt.executeQuery("USE " + database);
-		}catch (SQLException e){
-			e.printStackTrace();
-		}catch (ClassNotFoundException e){
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Adjusts the given cell in table_name (quiz_id, col_name) to be value
-	 * @param table_name
-	 * @param quiz_id
-	 * @param col_name
-	 * @param value
-	 * @throws SQLException 
-	 */
-	public void setQuizAttribute(String table_name, String quiz_id, String col_name, String value) throws SQLException {
-		stmt.executeUpdate("UPDATE " + table_name + " SET " + col_name + " = " + value 
-				+ " WHERE " + QUIZ_ID_COL + " = " + quiz_id + ";");
-	}
-	
-	/**
-	 * Simply shuts off the connection. This is used specifically if someone is removing the quiz object.
-	 * @throws SQLException 
-	 */
-	public void close() throws SQLException {
-		stmt.close();
-		con.close();
-	}
-	
-	/**
-	 * Returns a ResultSet for the given quiz_id
-	 * @param table_name
-	 * @param quiz_id
-	 * @return
-	 * @throws SQLException 
-	 */
-	public ResultSet getQuizRowInfo(String table_name, String quiz_id) throws SQLException{
-		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE "
-				+ QUIZ_ID_COL + " = " + quiz_id + ";");
+		super(TABLE_NAME, ID_COL, INPUT_COLS);
 	}
 	
 	
 	/**
-	 * Takes in a string, attributes, that is formatted to list the values to be inserted into the 
-	 * columns indicated by INPUT_COLS. The method returns the id of the newly inserted quiz.
-	 * @param table_name
-	 * @return quiz id
-	 * @throws SQLException 
+	 * Get all quizzes ordered by date_taken DESC
+	 * 
+	 * @return a ResultSet
+	 * @throws SQLException
 	 */
-	public String addQuizEntry(String table_name, String attributes) throws SQLException {
-		stmt.executeUpdate("INSERT INTO " + table_name + " " + INPUT_COLS + " VALUES " + attributes + ";");
-		return Long.toString(stmt.executeQuery("SELECT LAST_INSERT_ID();").getLong(QUIZ_ID_COL));
+	public ResultSet getQuizzes() throws SQLException {
+		return getQuizzes(DEFAULT_ORDER_COL, DEFAULT_ORDER_DIR);
 	}
-	
 	
 	
 	/**
-	 * This method returns, in String form, the given entry in table_name at cell
-	 * (quiz_id, col_name).
-	 * @param table_name
-	 * @param quiz_id
-	 * @param col_name
-	 * @return
-	 * @throws SQLException 
+	 * Get all quizzes ordered by order_col in the direction of order_dir
+	 * 
+	 * @param order_col
+	 * @param order_dir
+	 * @return a ResultSet
+	 * @throws SQLException
 	 */
-	public String getQuizAttribute(String table_name, String quiz_id, String col_name) throws SQLException{
-		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE "
-				+ QUIZ_ID_COL + " = " + quiz_id + ";").getString(col_name);
+	public ResultSet getQuizzes(String order_col, String order_dir) throws SQLException {
+		return stmt.executeQuery("SELECT * FROM " + table_name + " ORDER BY " + order_col + " " + order_dir);
 	}
 	
-
 	/**
-	 * This method removes a quiz object from the database, designated by quiz_id
-	 * @param table_name
-	 * @param quiz_id
-	 * @throws SQLException 
+	 * Get all quizzes created by a particular user ordered by date_taken DESC
+	 * 
+	 * @param uid
+	 * @return a ResultSet
+	 * @throws SQLException
 	 */
-	public void removeItem(String table_name, String quiz_id) throws SQLException{
-		stmt.executeUpdate("DELETE FROM " + table_name + " WHERE " + QUIZ_ID_COL + " = "
-				+ quiz_id + ";");
+	public ResultSet getQuizzesCreatedByUser(String uid) throws SQLException {
+		return getQuizzesCreatedByUser(uid, DEFAULT_ORDER_COL, DEFAULT_ORDER_DIR);
 	}
 	
+	/**
+	 * Get all quizzes created by a particular user ordered by order_col
+	 * in the direction of order_dir
+	 * 
+	 * @param uid
+	 * @param order_col
+	 * @param order_dir
+	 * @return a ResultSet
+	 * @throws SQLException
+	 */
+	public ResultSet getQuizzesCreatedByUser(String uid, String order_col, String order_dir) throws SQLException {
+		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE creator_id = " + uid + " ORDER BY " + order_col + " " + order_dir);
+	}
+	
+	
+	public ResultSet getPopularQuizzes() throws SQLException {
+		return getQuizzes("num_times_taken", "DESC");
+	}
+	
+	
+	public ResultSet getRecentlyCreatedQuizzes() throws SQLException {
+		return getQuizzes();
+	}
+	
+	
+	public ResultSet getQuizzesInGenre(String genre_id) throws SQLException {
+		return getQuizzesInGenre(genre_id, DEFAULT_ORDER_COL, DEFAULT_ORDER_DIR);
+	}
+	
+	
+	public ResultSet getQuizzesInGenre(String genre_id, String order_col, String order_dir) throws SQLException {
+		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE " + genre_id + " IN (genre_ids) ORDER BY " + order_col + " " + order_dir);
+	}
+	
+	
+	public String addQuiz(String quiz_name, String creator_id, String description, String question_ids, String genre_ids, String rand_flag, String multipage_flag, String practice_flag) {
+		String attributes = "(" + quiz_name + "," + creator_id + "," + description + "," + question_ids + "," + genre_ids + ",0,SYSDATE()" + rand_flag + "," + multipage_flag + "," + practice_flag + ")";
+		return addEntry(attributes);
+	}
 }

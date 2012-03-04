@@ -4,73 +4,48 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 
-public class UserDBConnection {
-	static String account = "quizzesdb";
-	static String password = "IlPY!py4p!";
-	static String server = "quizzesdb.db.8260487.hostedresource.com";
-	static String database = "quizzesdb"; 
-	private Connection con;
-	private Statement stmt;
-	private static final String USER_ID_COL = "user_id";
-	private static final String INPUT_COLS = "(name,user_id,date_joined,last_login,is_admin,quiz_friends,achievements)";
+public class UserDBConnection extends DBConnection {
+	//private static final String USER_ID_COL = "user_id";
+	//private static final String INPUT_COLS = "(name,user_id,date_joined,last_login,is_admin,quiz_friends,achievements)";
 	
+	private static final String TABLE_NAME = "users";
+	private static final String ID_COL = "uid";
+	private static final String INPUT_COLS = "(is_admin,name,fb_friends,quiz_friends,date_joined,last_login,password,achievements)";
+	private static final String DEFAULT_ORDER_COL = "uid";
+	private static final String DEFAULT_ORDER_DIR = "ASC";
 	
 	
 	public UserDBConnection() {
-		try{
-			Class.forName("com.mysql.jdbc.Driver");
-			con = DriverManager.getConnection("jdbc:mysql://" + server, account, password);
-			stmt = con.createStatement();
-			stmt.executeQuery("USE " + database);
-		}catch (SQLException e){
-			e.printStackTrace();
-		}catch (ClassNotFoundException e){
-			e.printStackTrace();
-		}
-	}
-	
-		
-	
-	/**
-	 * Adjusts the given cell in table_name (user_id, col_name) to be value
-	 * @param table_name
-	 * @param user_id
-	 * @param col_name
-	 * @param value
-	 * @throws SQLException 
-	 */
-	public void setUserAttribute(String table_name, String user_id, String col_name, String value) throws SQLException {
-		stmt.executeUpdate("UPDATE " + table_name + " SET " + col_name + " = " + value 
-				+ " WHERE " + USER_ID_COL + " = " + user_id + ";");
+		super(TABLE_NAME, ID_COL, INPUT_COLS);
 	}
 	
 	
-	
-	
-	/**
-	 * Simply shuts off the connection. This is used specifically if someone is removing the quiz object.
-	 * @throws SQLException 
-	 */
-	public void close() throws SQLException {
-		stmt.close();
-		con.close();
+	public ResultSet getUser(String uid) throws SQLException {
+		return getRowInfo(uid);
 	}
 	
 	
-	
-	/**
-	 * Returns a ResultSet for the given user_id
-	 * @param table_name
-	 * @param user_id
-	 * @return
-	 * @throws SQLException 
-	 */
-	public ResultSet getUserRowInfo(String table_name, String user_id) throws SQLException{
-		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE "
-				+ USER_ID_COL + " = " + user_id + ";");
+	public ResultSet getAdmins() throws SQLException {
+		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE is_admin = 1");
 	}
 	
 	
+	public ResultSet getFriendsOfUser(String uid) throws SQLException {
+		String fb_friends = getAttribute(uid,"fb_friends");
+		String quiz_friends = getAttribute(uid,"quiz_friends");
+		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE uid IN (" + fb_friends + "," + quiz_friends + ") ORDER BY " + DEFAULT_ORDER_COL + " " + DEFAULT_ORDER_DIR);
+	}
+	
+	
+	public ResultSet getUsersWithAchievement(String achievement_id) throws SQLException {
+		return stmt.executeQuery("SELECT * FROM " + table_name + " WHERE " + achievement_id + " IN (achievements) ORDER BY " + DEFAULT_ORDER_COL + " " + DEFAULT_ORDER_DIR);
+	}
+	
+	
+	public String addUser(String name, String password) {
+		String attributes = "(0," + name + ",\"\",\"\",SYSDATE(),SYSDATE()," + password + ",\"\"";
+		return addEntry(attributes);
+	}
 	
 	
 	/**

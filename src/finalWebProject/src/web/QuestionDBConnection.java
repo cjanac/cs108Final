@@ -1,11 +1,8 @@
 package finalWebProject.src.web;
 
-
 import java.sql.*;
 
-
-
-public class QuestionDBConnection {
+public class QuestionDBConnection extends DBConnection {
 	static String account = "quizzesdb";
 	static String password = "IlPY!py4p!";
 	static String server = "quizzesdb.db.8260487.hostedresource.com";
@@ -17,19 +14,14 @@ public class QuestionDBConnection {
 	
 	private static final String QUESTION_COLS = "(quesetion_id, quiz_id, question_text, type, picture_url, genre_ids)";
 	
+	private static final String TABLE_NAME = "questions";
+	private static final String ID_COL = "question_id";
+	private static final String INPUT_COLS = "(quiz_id, type, question_text, picture_url, genre_ids)";
+	private static final String DEFAULT_ORDER_COL = "question_id";
+	private static final String DEFAULT_ORDER_DIR = "ASC";
 	
 	public QuestionDBConnection(){
-		try{
-			Class.forName("com.mysql.jdbc.Driver");
-			con = DriverManager.getConnection("jdbc:mysql://" + server, account, password);
-			stmt = con.createStatement();
-			stmt.executeQuery("USE " + database);
-			thisconnection = this;
-		}catch (SQLException e){
-			e.printStackTrace();
-		}catch (ClassNotFoundException e){
-			e.printStackTrace();
-		}
+		super(TABLE_NAME, ID_COL, INPUT_COLS);
 	}
 	
 	/* Given parameter of the question_id returns the result set containing
