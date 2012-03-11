@@ -86,8 +86,8 @@ public class QuizDBConnection extends DBConnection {
 	}
 	
 	
-	public String addQuiz(String quiz_name, String creator_id, String description, String question_ids, String genre_ids, String rand_flag, String multipage_flag, String practice_flag) {
-		String attributes = "(" + quiz_name + "," + creator_id + "," + description + "," + question_ids + "," + genre_ids + ",0,SYSDATE()" + rand_flag + "," + multipage_flag + "," + practice_flag + ")";
+	public String addQuiz(String quiz_name, String creator_id, String description, String question_ids, String genre_ids, String rand_flag, String multipage_flag, String practice_flag, String grade_now_flag) {
+		String attributes = "(" + quiz_name + "," + creator_id + "," + description + "," + question_ids + "," + genre_ids + ",0,SYSDATE()" + rand_flag + "," + multipage_flag + "," + practice_flag + "," + grade_now_flag + ")";
 		return addEntry(attributes);
 	}
 }

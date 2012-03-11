@@ -31,5 +31,20 @@ public class QuizDBConTest {
 		System.out.println(set.getString("date_created"));
 	}
 	
+	@Test
+	public void getAttributeTest() throws SQLException {
+		assertEquals("name", db.getQuizAttribute(TABLE_NAME, quiz_id, "quiz_name"));
+		assertEquals("10", db.getQuizAttribute(TABLE_NAME, quiz_id, "num_times_taken"));
+		assertEquals("question list", db.getQuizAttribute(TABLE_NAME, quiz_id, "questions_ids"));
+	}
+	
+	@Test
+	public void setGetAttributeTest() throws SQLException {
+		db.setQuizAttribute(TABLE_NAME, quiz_id, "quiz_name", "\"poppycock\"");
+		db.setQuizAttribute(TABLE_NAME, quiz_id, "num_times_taken", "30");
+		assertEquals("poppycock", db.getQuizAttribute(TABLE_NAME, quiz_id, "quiz_name"));
+		assertEquals("30", db.getQuizAttribute(TABLE_NAME, quiz_id, "num_times_taken"));
+	}
+	
 	
 }

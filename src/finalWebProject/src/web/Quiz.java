@@ -21,6 +21,7 @@ public class Quiz {
 	private boolean rand_flag;
 	private boolean multipage_flag;
 	private boolean practice_flag;
+	private boolean grade_now_flag;
 	private QuizDBConnection db;
 	private static final String TABLE_NAME = "quizzes";
 	private static final String QUIZ_ID = "quiz_id";
@@ -34,6 +35,7 @@ public class Quiz {
 	private static final String RANDOM = "rand_flag";
 	private static final String PAGES = "multipage_flag";
 	private static final String PRACTICE = "practice_flag";
+	private static final String GRADE = "grade_now_flag";
 	private static final String ID_DELIMS = ", \t\n\r\f";
 	
 	
@@ -55,7 +57,7 @@ public class Quiz {
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name, String description,
 			ArrayList<String> question_ids, ArrayList<String> genre_ids, int timesTaken, 
-			boolean rand_flag, boolean multipage_flag, boolean practice_flag) throws SQLException {
+			boolean rand_flag, boolean multipage_flag, boolean practice_flag, boolean grade_now_flag) throws SQLException {
 		super();
 		db = new QuizDBConnection();
 		this.creator_id = creator_id;
@@ -67,6 +69,7 @@ public class Quiz {
 		this.rand_flag = rand_flag;
 		this.multipage_flag = multipage_flag;
 		this.practice_flag = practice_flag;
+		this.grade_now_flag = grade_now_flag;
 		if(quiz_id == null) {
 			this.quiz_id = addToDatabase();
 			setDate();
@@ -89,6 +92,7 @@ public class Quiz {
 		this.rand_flag = set.getBoolean(RANDOM);
 		this.multipage_flag = set.getBoolean(PAGES);
 		this.practice_flag = set.getBoolean(PRACTICE);
+		this.grade_now_flag = set.getBoolean(GRADE);
 	}
 
 	//note that if only putting in question_ids, put description before ArrayList in 
@@ -105,7 +109,7 @@ public class Quiz {
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name, String description,
 			ArrayList<String> question_ids, int timesTaken) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, description, question_ids, null, timesTaken, false, false, false);
+		this(quiz_id, creator_id, quiz_name, description, question_ids, null, timesTaken, false, false, false, false);
 		if(quiz_id != null){
 			ResultSet set = db.getQuizRowInfo(TABLE_NAME, this.quiz_id);
 			set.next();
@@ -129,7 +133,7 @@ public class Quiz {
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name,
 			ArrayList<String> genre_ids, String description, int timesTaken) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, description, null, genre_ids, timesTaken, false, false, false);
+		this(quiz_id, creator_id, quiz_name, description, null, genre_ids, timesTaken, false, false, false, false);
 		if(quiz_id != null){
 			ResultSet set = db.getQuizRowInfo(TABLE_NAME, this.quiz_id);
 			set.next();
@@ -148,7 +152,7 @@ public class Quiz {
 	 * @throws SQLException 
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name, boolean isNew, String description, int timesTaken) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, description, null, null, timesTaken, false, false, false);
+		this(quiz_id, creator_id, quiz_name, description, null, null, timesTaken, false, false, false, false);
 		if(quiz_id != null){
 			ResultSet set = db.getQuizRowInfo(TABLE_NAME, this.quiz_id);
 			set.next();
@@ -167,7 +171,7 @@ public class Quiz {
 	 * @throws SQLException 
 	 */
 	public Quiz(String quiz_id, String creator_id, String quiz_name, int timesTaken) throws SQLException {
-		this(quiz_id, creator_id, quiz_name, "", null, null, timesTaken, false, false, false);
+		this(quiz_id, creator_id, quiz_name, "", null, null, timesTaken, false, false, false, false);
 		if(quiz_id != null){
 			ResultSet set = db.getQuizRowInfo(TABLE_NAME, this.quiz_id);
 			set.next();
@@ -184,7 +188,7 @@ public class Quiz {
 	 * @throws SQLException 
 	 */
 	public Quiz(String quiz_id) throws SQLException{
-		this(quiz_id, "", "", "", null, null, 0, false, false, false);
+		this(quiz_id, "", "", "", null, null, 0, false, false, false, false);
 		ResultSet set = db.getQuizRowInfo(TABLE_NAME, this.quiz_id);
 		set.next();
 		question_ids = toArrayList(set.getString(QUESTIONS));
@@ -574,6 +578,14 @@ public class Quiz {
 	}
 	
 	/**
+	 * 
+	 * @return
+	 */
+	public boolean getGradeNowFlag() {
+		return this.grade_now_flag;
+	}
+	
+	/**
 	 * @throws SQLException 
 	 * 
 	 */
@@ -601,6 +613,15 @@ public class Quiz {
 	}
 	
 	/**
+	 * @throws SQLException 
+	 * 
+	 */
+	public void setGradeNowFlag() throws SQLException {
+		if(this.grade_now_flag) db.setQuizAttribute(TABLE_NAME, this.quiz_id, "grade_now_flag", "TRUE");
+		else db.setQuizAttribute(TABLE_NAME, this.quiz_id, "grade_now_flag", "FALSE");
+	}
+	
+	/**
 	 * Do not call further methods on quiz object after calling this method.
 	 * Behavior is undefined.
 	 * @throws SQLException 
@@ -611,7 +632,7 @@ public class Quiz {
 	}
 	
 	/*
-	 * 
+	 * adds the quiz to the database by formatting a string that delineates all of its attributes
 	 */
 	private String addToDatabase() throws SQLException {
 		String attributes = "( \"" + this.quiz_name + "\", \"" + this.creator_id + "\", \"" + this.description + "\", \"" + 
@@ -620,7 +641,7 @@ public class Quiz {
 	}
 	
 	/*
-	 * 
+	 * sets up the flag section of the attribute string in the addToDatabase method
 	 */
 	private String getFlagString() {
 		String str = "";
@@ -628,7 +649,9 @@ public class Quiz {
 		else str += "FALSE, ";
 		if(this.multipage_flag) str += "TRUE, ";
 		else str += "FALSE, ";
-		if(this.practice_flag) str += "TRUE";
+		if(this.practice_flag) str += "TRUE, ";
+		else str += "FALSE, ";
+		if(this.grade_now_flag) str += "TRUE";
 		else str += "FALSE";
 		return str;
 	}
